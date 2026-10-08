@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI 회화 친구</title>
+<meta name="theme-color" content="#e8743b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23e8743b%27/%3E%3Ctext x=%2732%27 y=%2742%27 font-size=%2732%27 text-anchor=%27middle%27%3E%F0%9F%92%AC%3C/text%3E%3C/svg%3E">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#fbf7f0;--card:#fff;--ink:#2b2622;--sub:#7a6f66;--line:#e9e0d3;--me:#ffd9a8;--ai:#fff;--accent:#e8743b;--accent2:#fde7d6;--face:#ffc98b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1917;--card:#292422;--ink:#f3ece4;--sub:#a99d92;--line:#3b3330;--me:#7a4a24;--ai:#2f2926;--accent:#f08a54;--accent2:#43301f;--face:#e8a566}}
+:root[data-theme="dark"]{--bg:#1c1917;--card:#292422;--ink:#f3ece4;--sub:#a99d92;--line:#3b3330;--me:#7a4a24;--ai:#2f2926;--accent:#f08a54;--accent2:#43301f;--face:#e8a566}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;display:flex;flex-direction:column;max-width:560px;margin:0 auto;-webkit-tap-highlight-color:transparent}
+header{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--line)}
+#face{width:64px;height:64px;flex:none}
+#face .mouth{transform-origin:32px 44px;transition:transform .1s}
+#face.talk .mouth{animation:talk .32s infinite alternate}
+@keyframes talk{from{transform:scaleY(.5)}to{transform:scaleY(1.7)}}
+#face .eye{animation:blink 4s infinite;transform-origin:center;transform-box:fill-box}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.hd{flex:1;min-width:0}.hd b{font-size:17px}.hd small{display:block;color:var(--sub);font-size:12px;margin-top:2px}
+button{font:inherit;color:inherit;cursor:pointer}
+.ib{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 10px;font-size:18px}
+#chat{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.b{max-width:86%;padding:10px 13px;border-radius:18px;line-height:1.45;word-break:break-word}
+.b.ai{background:var(--ai);border:1px solid var(--line);border-top-left-radius:6px;align-self:flex-start}
+.b.me{background:var(--me);border-top-right-radius:6px;align-self:flex-end}
+.say{font-size:20px;font-weight:600}.ko{font-size:13px;color:var(--sub);margin-top:3px}
+.rep{margin-top:8px;padding:8px 10px;background:var(--accent2);border-radius:12px;font-size:17px}
+.rep small{display:block;font-size:12px;color:var(--sub);margin-bottom:2px}
+.rep button,.reveal{margin-top:6px;border:0;background:transparent;color:var(--accent);font-size:13px;padding:2px 0}
+.hide .say,.hide .ko,.hide .rep{display:none}.reveal{display:none}.hide .reveal{display:block;font-size:15px}
+#st{min-height:20px;text-align:center;font-size:13px;color:var(--sub);padding:0 12px}
+#st.err{color:#d2452b}
+.bar{padding:6px 12px 4px;display:flex;gap:8px}
+.bar input{flex:1;min-width:0;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:11px 13px;font:inherit;font-size:16px}
+.bar button.send{border:0;background:var(--accent);color:#fff;border-radius:14px;padding:0 16px;font-weight:600}
+.mic{display:flex;flex-direction:column;align-items:center;padding:4px 0 10px;gap:6px}
+#mic{width:84px;height:84px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:34px;box-shadow:0 4px 14px rgba(232,116,59,.4);touch-action:none;user-select:none;-webkit-user-select:none}
+#mic.on{background:#d2452b;transform:scale(1.08)}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:20px;padding:5px 12px;font-size:12.5px;color:var(--sub)}
+button:disabled,input:disabled{opacity:.45}
+#intro{margin:auto;text-align:center;padding:18px;color:var(--sub);line-height:1.6}
+#intro .go{margin-top:12px;border:0;background:var(--accent);color:#fff;border-radius:16px;padding:13px 28px;font-size:18px;font-weight:600}
+#set{position:fixed;inset:0;background:var(--bg);overflow-y:auto;padding:calc(14px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));display:none;z-index:9;max-width:560px;margin:0 auto}
+#set.open{display:block}
+#set h2{margin:4px 0 12px;font-size:19px}
+#set label{display:block;font-size:13px;color:var(--sub);margin:12px 0 4px}
+#set input[type=text],#set input[type=number],#set select{width:100%;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:10px 12px;font:inherit;font-size:16px}
+.row{display:flex;gap:10px}.row>div{flex:1}
+.chk{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:15px}
+.acts{display:flex;gap:10px;margin-top:20px}.acts button{flex:1;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-weight:600}
+.acts .pri{background:var(--accent);color:#fff;border:0}
+.note{font-size:12px;color:var(--sub);margin-top:14px;line-height:1.5}
+.pr{font-size:14px;color:var(--accent);margin-top:2px}
+.say{cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+  <svg id="face" viewBox="0 0 64 64" aria-hidden="true">
+    <circle cx="32" cy="32" r="29" fill="var(--face)"/>
+    <ellipse class="eye" cx="22" cy="27" rx="3.2" ry="4" fill="#3a2a20"/>
+    <ellipse class="eye" cx="42" cy="27" rx="3.2" ry="4" fill="#3a2a20"/>
+    <circle cx="15" cy="38" r="4.5" fill="#ff9d8a" opacity=".55"/><circle cx="49" cy="38" r="4.5" fill="#ff9d8a" opacity=".55"/>
+    <ellipse class="mouth" cx="32" cy="44" rx="7" ry="3.6" fill="#7a2f22"/>
+  </svg>
+  <div class="hd"><b id="fname">친구</b><small id="fsub">AI 친구 · 언어 연습을 돕는 AI예요</small></div>
+  <button class="ib" id="btnEnd" title="마무리" aria-label="마무리">👋</button>
+  <button class="ib" id="btnSet" title="설정" aria-label="설정">⚙️</button>
+</header>
+<div id="chat"><div id="intro">
+  <div style="font-size:42px">💬</div>
+  <div><b style="color:var(--ink);font-size:18px">천천히, 친구처럼 이야기해요</b><br>한국어로 대답해도 괜찮아요.<br>듣기 → 따라 말하기 → 읽기 → 쓰기 순서예요.</div>
+  <button class="go" id="btnGo">시작하기</button>
+  <div style="font-size:12px;margin-top:10px">먼저 ⚙️에서 내 사용설명서를 채워도 좋아요.</div>
+</div></div>
+<div id="st"></div>
+<div class="bar"><input id="tx" type="text" placeholder="글자로 말하기 (한국어/배울 언어)" autocomplete="off" enterkeyhint="send"><button class="send" id="btnSend">보내기</button></div>
+<div class="mic">
+  <button id="mic" aria-label="누르고 말하기">🎤</button>
+  <button class="chip" id="btnLis">듣는 말: 한국어</button>
+</div>
+
+<div id="set">
+  <h2>내 사용설명서</h2>
+  <div class="row">
+    <div><label>나는</label><select id="f_who"><option>성인</option><option>아이</option></select></div>
+    <div><label>나이</label><input id="f_age" type="number" min="3" max="99" inputmode="numeric"></div>
+  </div>
+  <label>대화 방식</label><select id="f_mode"><option>가르쳐 주기</option><option>자유 대화</option></select>
+  <label>배울 언어</label><select id="f_lang"></select>
+  <label>지금 수준</label><select id="f_level"><option>완전 처음</option><option>단어 몇 개 앎</option><option>짧은 대화 됨</option><option>일상 대화 됨</option></select>
+  <label>좋아하는 것 (예: 축구, 요리, 여행)</label><input id="f_likes" type="text">
+  <div class="row">
+    <div><label>하루에 쓸 시간(분)</label><input id="f_mins" type="number" min="1" max="120" inputmode="numeric"></div>
+    <div><label>따라 말하기</label><select id="f_repeat"><option>적게</option><option>보통</option><option>많이</option></select></div>
+  </div>
+  <label>친구 이름</label><input id="f_name" type="text">
+  <label>말 속도: <span id="spv"></span></label><input id="f_speed" type="range" min="0.6" max="1.1" step="0.02" style="width:100%">
+  <div class="chk"><input id="f_ko" type="checkbox"><label for="f_ko" style="margin:0;color:var(--ink)">한국어 뜻 보이기</label></div>
+  <div class="chk"><input id="f_sf" type="checkbox"><label for="f_sf" style="margin:0;color:var(--ink)">소리 먼저, 글자는 뒤에 보이기</label></div>
+  <label>Gemini API 키 (이 폰에만 저장돼요)</label><input id="f_key" type="password" autocomplete="off" placeholder="AIza…">
+  <label>모델 이름</label><input id="f_model" type="text" autocapitalize="off">
+  <div class="acts"><button id="btnNew">새 대화</button><button class="pri" id="btnSave">저장</button></div>
+  <div class="note">대화 기록과 설정은 이 기기의 브라우저에만 저장돼요. 이 앱은 사람이 아니라 언어 연습을 돕는 AI 친구예요. AI는 Google Gemini API를 써요. 키는 내 폰 브라우저에만 저장되고, 남에게 주거나 인터넷에 올리지 마세요. 구글 쪽에 한 달 사용 한도를 걸어 두세요.</div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const LANGS={'영어':'en-US','일본어':'ja-JP','스페인어':'es-ES','중국어':'zh-CN','프랑스어':'fr-FR','독일어':'de-DE'};
+const DEF={who:'성인',age:'',lang:'영어',level:'완전 처음',likes:'',mins:15,name:'Emma',repeat:'보통',speed:0.88,showKo:true,soundFirst:false,mode:'가르쳐 주기',key:'',model:'gemini-3.1-flash-lite'};
+let S=Object.assign({},DEF,LS.get('s',{}));
+let hist=LS.get('h',[]);          // {role,content,show?}
+let listen='ko',busy=false,locked=false,wrapped=false,speaking=0;
+const L=()=>LANGS[S.lang]||'en-US';
+
+/* ---------- 설정 ---------- */
+$('#f_lang').innerHTML=Object.keys(LANGS).map(k=>`<option>${k}</option>`).join('');
+function fill(){$('#f_who').value=S.who;$('#f_mode').value=S.mode||DEF.mode;$('#f_age').value=S.age;$('#f_lang').value=S.lang;$('#f_level').value=S.level;$('#f_likes').value=S.likes;
+ $('#f_mins').value=S.mins;$('#f_repeat').value=S.repeat;$('#f_name').value=S.name;$('#f_speed').value=S.speed;$('#spv').textContent=(+S.speed).toFixed(2)+'배';
+ $('#f_key').value=S.key||'';$('#f_model').value=S.model||DEF.model;$('#f_ko').checked=S.showKo;$('#f_sf').checked=S.soundFirst}
+function head(){$('#fname').textContent=S.name||'친구';$('#btnLis').textContent='듣는 말: '+(listen==='ko'?'한국어':S.lang)}
+$('#f_speed').oninput=e=>$('#spv').textContent=(+e.target.value).toFixed(2)+'배';
+$('#btnSet').onclick=()=>{fill();$('#set').classList.add('open')};
+$('#btnSave').onclick=()=>{S={who:$('#f_who').value,mode:$('#f_mode').value,age:$('#f_age').value,lang:$('#f_lang').value,level:$('#f_level').value,likes:$('#f_likes').value.trim(),
+ mins:Math.max(1,+$('#f_mins').value||15),repeat:$('#f_repeat').value,name:$('#f_name').value.trim()||'친구',speed:+$('#f_speed').value,showKo:$('#f_ko').checked,soundFirst:$('#f_sf').checked,key:$('#f_key').value.trim(),model:$('#f_model').value.trim()||DEF.model};
+ LS.set('s',S);head();$('#set').classList.remove('open')};
+$('#btnNew').onclick=()=>{if(!confirm('지금까지의 대화를 지우고 새로 시작할까요?'))return;speechSynthesis.cancel();hist=[];LS.set('h',hist);LS.set('u',{d:'',s:0});
+ locked=false;wrapped=false;$('#chat').innerHTML='';$('#chat').appendChild(intro);setLock(false);msg('');$('#set').classList.remove('open')};
+
+/* ---------- 대화 설정(시스템 지시) ---------- */
+function sys(){return S.mode==='자유 대화'?sysFree():sysTeach()}
+function sysTeach(){
+ return `[내 사용설명서]
+- 나는: ${S.who}${S.age?' · '+S.age+'살':''}
+- 모국어: 한국어
+- 배울 언어: ${S.lang}
+- 지금 수준: ${S.level}
+- 좋아하는 것: ${S.likes||'(아직 모름)'}
+- 하루에 쓸 시간: ${S.mins}분
+- 친구 이름: ${S.name}
+
+[대화 설정 - 가르쳐 주기]
+너는 ${S.lang}를 알려 주는 다정한 친구 ${S.name}이야. 선생님 말고 친구처럼. 나는 한국어로 말하고, 너는 "내가 ${S.lang}로 뭐라고 말하면 되는지"를 매번 알려 줘.
+매번 JSON 칸을 이렇게 채워:
+1. say: ${S.lang}로 짧은 반응이나 쉬운 질문 하나(한 문장, 8단어쯤). say_pron: say의 한글 발음. ko: say의 한국어 뜻.
+2. repeat: 내가 따라 말할 ${S.lang} 문장 하나(짧게). 내가 방금 한국어로 말했으면 그 말을 자연스러운 ${S.lang} 문장으로 바꿔서 넣어. 내가 뭐라고 답할지 모르겠다고 하거나 네 질문에 답해야 하는 상황이면, 네 질문에 대한 쉬운 예시 대답을 넣어. 항상 repeat를 줘. 빈 칸 금지.
+3. rep_pron: repeat의 한글 발음(예: 일본어 ありがとう는 "아리가토"). rep_ko: repeat의 한국어 뜻.
+4. say와 repeat에는 ${S.lang} 글자만 써. 한국어는 say_pron, ko, rep_pron, rep_ko 칸에만 써.
+5. 내가 ${S.lang}로 말하면 그 문장을 부드럽게 다듬어서 repeat에 넣고, 칭찬은 한 단어로 해.
+6. 어떤 대답이든 괜찮아. 점수·문법 설명·발음 지적은 하지 마.
+7. 내 수준과 좋아하는 것에 맞춰 쉬운 말을 써.
+8. 마무리 요청을 받으면 say에 오늘 쓴 문장 3개까지와 "하나 써 볼래?"를 담아.
+9. 사람인 척하지 마. 물어보면 "언어 연습을 돕는 AI 친구"라고 해. 주소·학교·연락처·비밀번호는 묻지 마.
+${S.who==='아이'?'아이와 이야기 중이야. 이름·학교·주소 같은 개인정보는 묻지 말고, 무섭거나 어른 이야기는 하지 마.\n':''}
+[출력 형식] 반드시 JSON 객체 하나만 출력해. 마크다운·코드블록·설명 금지.
+{"say":"","say_pron":"","ko":"","repeat":"","rep_pron":"","rep_ko":""}
+처음엔 네가 먼저 짧게 인사하고 오늘 하루가 어땠는지 하나만 물어봐. repeat에는 그 질문에 대한 쉬운 예시 대답을 넣어.`}
+function sysFree(){
+ const rep={적게:'따라 말하기는 드물게(대여섯 번에 한 번)',보통:'따라 말하기는 가끔(서너 번에 한 번)',많이:'따라 말하기는 자주(두 번에 한 번)'}[S.repeat];
+ return `[내 사용설명서]
+- 나는: ${S.who}${S.age?' · '+S.age+'살':''}
+- 모국어: 한국어
+- 배울 언어: ${S.lang}
+- 지금 수준: ${S.level}
+- 좋아하는 것: ${S.likes||'(아직 모름)'}
+- 하루에 쓸 시간: ${S.mins}분
+- 친구 이름: ${S.name}
+- 따라 말하기: ${S.repeat}
+
+[대화 설정]
+너는 위 사용설명서의 사람과 ${S.lang}로 수다 떠는 친구 ${S.name}이야. 선생님 말고 친구처럼 말해 줘.
+[가장 중요] say와 repeat는 첫 인사부터 끝까지 항상 ${S.lang}로만 써. 내가 한국어로 말해도, 한국어로 물어봐도 say는 ${S.lang}야. say·repeat에 한국어 글자는 쓰지 마. 한국어는 ko 칸에만 써.
+1. 한 번에 한 가지 이야기만: 방금 내가 한 말에 대해서.
+2. 한 번에 짧은 문장 두 개까지(한 문장에 8단어쯤). 반응하고 → 쉬운 질문 하나, 또는 따라 말할 문장 하나. 둘을 한꺼번에 하지는 마.
+3. 내가 한국어로 말하면 알아듣고 ${S.lang}로 쉽게 대답해. 그리고 자주(매번은 말고) 내 말을 그 언어 문장으로 바꿔서 따라 말하게 해 줘. ${rep}.
+4. 따라 말할 문장은 repeat 칸에 짧게 넣어. 앱이 "따라 해 볼까?"라는 한국어 신호를 직접 붙이니 너는 신호를 쓰지 마. 따라 말할 문장을 줄 땐 say는 한 단어 반응만 하고 기다려.
+5. 한국어는 ko 칸의 짧은 뜻, 또는 내가 뜻을 물어볼 때만 써.
+6. 어떤 대답이든 괜찮아. 한 단어여도, 틀려도. 칭찬은 한 단어로. 점수·문법 설명·발음 지적은 하지 마.
+7. 내 수준과 좋아하는 것에 맞춰 말해. 이야깃거리가 떨어질 때만 좋아하는 것을 꺼내.
+8. 내가 ${S.lang}로 대답하기 시작하면 한국어 도움을 조금씩 줄여.
+9. 끝낼 때 오늘 같이 쓴 문장을 3개까지 정리해 주고, 하나를 써 보라고 해.
+10. 사람인 척하지 마. 물어보면 "언어 연습을 돕는 AI 친구"라고 해. 주소·학교·연락처·비밀번호는 묻지 마.
+${S.who==='아이'?'아이와 이야기 중이야. 이름·학교·주소 같은 개인정보는 묻지 말고, 무섭거나 어른 이야기는 하지 마.\n':''}
+[출력 형식] 반드시 JSON 객체 하나만 출력해. 마크다운·코드블록·설명 금지.
+{"say":"${S.lang} 문장(짧게)","ko":"say의 짧은 한국어 뜻","repeat":"따라 말할 ${S.lang} 문장, 없으면 빈 문자열"}
+마무리 요청을 받으면 say에 오늘 쓴 문장 3개까지와 "하나 써 볼래?"를 담아.
+처음엔 네가 먼저 짧게 인사하고, 오늘 하루가 어땠는지 하나만 물어봐.`}
+
+/* ---------- 화면 ---------- */
+const intro=$('#intro');
+function msg(t,err){const e=$('#st');e.textContent=t;e.className=err?'err':''}
+function scroll(){const c=$('#chat');c.scrollTop=c.scrollHeight}
+function meBubble(t){intro.remove();const d=document.createElement('div');d.className='b me';d.textContent=t;$('#chat').appendChild(d);scroll()}
+function aiBubble(p,hidden){intro.remove();const d=document.createElement('div');d.className='b ai'+(hidden?' hide':'');
+ const say=document.createElement('div');say.className='say';say.textContent=p.say||'';say.onclick=()=>speak([[p.say,L(),S.speed]]);d.appendChild(say);
+ if(p.say_pron){const x=document.createElement('div');x.className='pr';x.textContent=p.say_pron;d.appendChild(x)}
+ if(S.showKo&&p.ko){const k=document.createElement('div');k.className='ko';k.textContent=p.ko;d.appendChild(k)}
+ if(p.repeat){const r=document.createElement('div');r.className='rep';r.innerHTML='<small>따라 해 볼까?</small>';
+  const t=document.createElement('div');t.textContent=p.repeat;r.appendChild(t);
+  if(p.rep_pron){const x=document.createElement('div');x.className='pr';x.textContent=p.rep_pron;r.appendChild(x)}
+  if(S.showKo&&p.rep_ko){const k=document.createElement('div');k.className='ko';k.textContent=p.rep_ko;r.appendChild(k)}
+  const b=document.createElement('button');b.textContent='🔁 다시 듣기';b.onclick=()=>speak([[p.repeat,L(),S.speed*0.95]]);r.appendChild(b);d.appendChild(r)}
+ const rv=document.createElement('button');rv.className='reveal';rv.textContent='🔊 듣는 중… 탭하면 글자 보기';rv.onclick=()=>d.classList.remove('hide');d.appendChild(rv);
+ $('#chat').appendChild(d);scroll();return d}
+
+/* ---------- 말하기(speechSynthesis) ---------- */
+let voices=[];function loadV(){try{voices=speechSynthesis.getVoices()}catch(e){}}loadV();try{speechSynthesis.onvoiceschanged=loadV}catch(e){}
+function pick(lang){const n=lang.replace('_','-');return voices.find(v=>v.lang.replace('_','-')===n)||voices.find(v=>v.lang.toLowerCase().startsWith(n.slice(0,2).toLowerCase()))}
+function speak(list,done){
+ if(!('speechSynthesis' in window)){done&&done();return}
+ speechSynthesis.cancel();const id=++speaking;$('#face').classList.add('talk');let i=0;
+ const end=()=>{if(id===speaking){$('#face').classList.remove('talk');done&&done()}};
+ const next=()=>{if(id!==speaking)return;if(i>=list.length)return end();const[t,lang,rate]=list[i++];if(!t)return next();
+  const u=new SpeechSynthesisUtterance(t);u.lang=lang;u.rate=rate;const v=pick(lang);if(v)u.voice=v;u.onend=next;u.onerror=next;speechSynthesis.speak(u)};
+ next()}
+
+/* ---------- 생각(AI): Gemini API ---------- */
+function parse(raw){let t=(raw||'').replace(/```json|```/g,'').trim();const a=t.indexOf('{'),b=t.lastIndexOf('}');
+ if(a>=0&&b>a){try{const o=JSON.parse(t.slice(a,b+1));return{say:String(o.say||''),say_pron:String(o.say_pron||''),ko:String(o.ko||''),repeat:String(o.repeat||''),rep_pron:String(o.rep_pron||''),rep_ko:String(o.rep_ko||'')}}catch(e){}}
+ return{say:t,say_pron:'',ko:'',repeat:'',rep_pron:'',rep_ko:''}}
+function turns(){let h=hist.slice(-24).map(m=>({role:m.role,content:m.content}));while(h.length&&h[0].role==='user')h.shift();
+ return[{role:'user',content:sys()+'\n\n[시작]'}].concat(h)}
+async function gem(extra){
+ const h=turns();
+ const body={systemInstruction:{parts:[{text:h[0].content.replace('\n\n[시작]','')+(extra||'')}]},
+  contents:[{role:'user',parts:[{text:'[시작] 첫 인사를 해 줘.'}]}].concat(h.slice(1).map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}))),
+  generationConfig:{responseMimeType:'application/json',temperature:0.8,maxOutputTokens:700}};
+ const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(S.model)+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.key},body:JSON.stringify(body)});
+ if(!r.ok){let m='';try{m=(await r.json()).error.message}catch(e){}const er=new Error(m||('HTTP '+r.status));er.status=r.status;throw er}
+ const j=await r.json();const c=j.candidates&&j.candidates[0];
+ return(c&&c.content&&c.content.parts||[]).map(p=>p.text||'').join('')}
+async function ask(){
+ if(!S.key){msg('먼저 ⚙️ 설정에서 Gemini API 키를 넣어 주세요.',true);if(hist.length&&hist[hist.length-1].role==='user'){hist.pop();LS.set('h',hist)}return}
+ busy=true;setLock();msg('생각 중…');
+ try{
+  const hang=t=>{const m=(t||'').match(/[가-힣]/g);return m&&m.length>=2&&m.length/Math.max(1,(t||'').replace(/\s/g,'').length)>0.3};
+  let p=parse(await gem());
+  if(S.lang!=='한국어'&&hang(p.say))p=parse(await gem('\n\n[다시 강조] 방금 say를 한국어로 썼어. say와 repeat는 반드시 '+S.lang+' 문장만 써. 한국어는 ko에만 써.'));
+  hist.push({role:'assistant',content:JSON.stringify(p)});LS.set('h',hist);msg('');
+  const b=aiBubble(p,S.soundFirst);
+  const list=[[p.say,L(),S.speed]];if(p.repeat){list.push(['따라 해 볼까?','ko-KR',0.95]);list.push([p.repeat,L(),S.speed*0.95])}
+  speak(list,()=>b.classList.remove('hide'));
+  if(!('speechSynthesis' in window))b.classList.remove('hide');
+ }catch(e){
+  const st=e&&e.status;msg(st===429?'사용량 한도에 걸렸어요. 잠시 후 다시 해 보세요.':st===400||st===403?'키가 맞는지 확인해 주세요. ('+e.message.slice(0,80)+')':st===404?'모델 이름을 확인해 주세요. ⚙️에서 바꿀 수 있어요.':'AI 연결에 문제가 생겼어요: '+(e.message||'').slice(0,80),true);
+  if(hist.length&&hist[hist.length-1].role==='user'){hist.pop();LS.set('h',hist)}wrapped=false;
+ }finally{busy=false;setLock()}}
+function send(text,show){text=(text||'').trim();if(!text||busy||locked)return;speechSynthesis.cancel();
+ meBubble(show||text);hist.push({role:'user',content:text,show});LS.set('h',hist);ask()}
+function setLock(){const d=busy||locked;['#mic','#btnSend','#tx'].forEach(s=>$(s).disabled=d)}
+
+$('#btnGo').onclick=()=>{if(!S.key){fill();$('#set').classList.add('open');msg('API 키를 넣고 저장한 뒤 시작하기를 눌러 주세요.');return}ask()};
+$('#btnSend').onclick=()=>{const v=$('#tx').value;$('#tx').value='';send(v)};
+$('#tx').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();$('#btnSend').click()}};
+$('#btnEnd').onclick=()=>endDay(false);
+function endDay(auto){if(wrapped||busy||!hist.length)return;wrapped=true;
+ send('[마무리] 오늘은 여기까지 할게. 오늘 같이 쓴 문장을 3개까지 정리해 주고, 하나를 써 보라고 해줘.','👋 오늘은 여기까지 할게요'+(auto?' (시간 끝)':''))}
+$('#btnLis').onclick=()=>{listen=listen==='ko'?'target':'ko';head()};
+
+/* ---------- 듣기(음성 인식) ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,heard='';
+function startRec(){
+ if(busy||locked)return;if(!SR){msg('이 브라우저는 음성 인식이 안 돼요. 크롬/엣지를 쓰거나 글자로 말해 주세요.',true);return}
+ speechSynthesis.cancel();heard='';rec=new SR();rec.lang=listen==='ko'?'ko-KR':L();rec.interimResults=true;rec.continuous=false;
+ rec.onresult=e=>{heard=Array.from(e.results).map(r=>r[0].transcript).join('');msg('“'+heard+'”')};
+ rec.onerror=e=>{rec=null;$('#mic').classList.remove('on');msg(e.error==='not-allowed'||e.error==='service-not-allowed'?'이 화면에서는 마이크가 막혀 있어요. 아래 글자 입력을 써 주세요.':e.error==='no-speech'?'소리가 안 들렸어요. 다시 눌러 말해 보세요.':'음성 인식에 문제가 있어요: '+e.error,true)};
+ rec.onend=()=>{$('#mic').classList.remove('on');const h=heard.trim();rec=null;if(h){msg('');send(h)}};
+ try{rec.start();$('#mic').classList.add('on');msg('듣는 중… 말하고 손을 떼세요')}catch(e){msg('마이크를 시작하지 못했어요.',true)}}
+function stopRec(){if(rec){try{rec.stop()}catch(e){}}}
+const mic=$('#mic');mic.addEventListener('pointerdown',e=>{e.preventDefault();startRec()});
+['pointerup','pointercancel','pointerleave'].forEach(n=>mic.addEventListener(n,stopRec));
+mic.addEventListener('contextmenu',e=>e.preventDefault());
+
+/* ---------- 하루 시간 제한 ---------- */
+setInterval(()=>{if(!hist.length||locked||document.hidden)return;const d=new Date().toDateString();let u=LS.get('u',{d:'',s:0});if(u.d!==d)u={d,s:0};u.s+=10;LS.set('u',u);
+ if(u.s>=S.mins*60){msg('오늘 시간이 다 됐어요. 오늘 쓴 문장을 정리할게요!');endDay(true);setTimeout(()=>{locked=true;setLock()},500)}},10000);
+(function chk(){const u=LS.get('u',{d:'',s:0});if(u.d===new Date().toDateString()&&u.s>=S.mins*60&&hist.length){locked=true;setLock();msg('오늘 시간이 다 됐어요. 내일 또 만나요! (⚙️에서 시간을 늘릴 수 있어요)')}})();
+
+/* ---------- 시작 ---------- */
+head();
+if(hist.length){intro.remove();hist.forEach(m=>{if(m.role==='user')meBubble(m.show||m.content);else{let p;try{p=JSON.parse(m.content)}catch(e){p={say:m.content}}aiBubble(p,false)}})}
+
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
